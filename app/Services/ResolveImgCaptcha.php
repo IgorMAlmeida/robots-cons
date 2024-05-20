@@ -29,7 +29,7 @@ class ResolveImgCaptcha
                 throw new \Exception($api->getErrorMessage());
             }
 
-            unlink($values['PathCaptcha']);
+            // unlink($values['PathCaptcha']);
             return [
                 "status"    =>  true,
                 "response"  =>  $api->getTaskSolution()

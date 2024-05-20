@@ -9,27 +9,29 @@ use DOMDocument;
 
 class SaveCaptchaImage extends Curl{
 
-    private string $portalConsignado;
+    private string $portalConsignadoBase;
+    private string $portalConsignadoAdm;
+
 
     public  function __construct()
     {
-        $this->portalConsignado = env('URL_PORTAL_CONSIGNADO');
+        $this->portalConsignadoBase = env('URL_PORTAL_CONSIGNADO_BASE');
+        $this->portalConsignadoAdm = env('URL_PORTAL_CONSIGNADO_ADMINISTRATIVO');
+
     }
 
-   public function getImage():array {
+   public function getImage($values):array {
 
       try{
-
         $data = [
-            'url'           => $this->portalConsignado."/home",
+            'url'           => $this->portalConsignadoAdm,
             'method'        => 'GET',
             'followLocation'=> true,
-            'cookie'        => 'JSESSIONID=0000y1iaLO3IU0Apbbbmy44xT6S:18guqmp5m'
+            'cookie'        => $values['cookieFile'],
+            'cookieFile'    => $values['cookieFile'],
         ];
-        
         $response = $this->get($data);
-        // var_dump($response);exit;
-        // exit;
+        $token = (new TokenService())->getToken($response);
 
         libxml_use_internal_errors(true);
         $doc = new DOMDocument();
@@ -46,23 +48,36 @@ class SaveCaptchaImage extends Curl{
             if($tag->getAttribute('id') == "cipCaptchaImg")
             {
                 $siteImageCaptcha = $tag->getAttribute('src');
-                //verificar pq n ta salvando
-                //alterar para tela de login correta
-                var_dump($siteImageCaptcha);exit;
-                $imageCaptchaDecoded = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $siteImageCaptcha));
-                $imagePath = getcwd().'/CaptchaImgs/consignado_'. date('Y_m_d_H_i_s') .'.png';
-                file_put_contents($imagePath, $imageCaptchaDecoded);
+
+                $data = [
+                    'url'           => $this->portalConsignadoBase.$siteImageCaptcha,
+                    'method'        => 'GET',
+                    'followLocation'=> true,
+                    'cookie'        => $values['cookieFile'],
+                    'cookieFile'    => $values['cookieFile'],
+                ];
+                $response = $this->get($data);
+
+                if(!$response['status']){
+                    throw new \Exception("Erro ao capturar imagem");
+                }
+
+                $directoryPath = getcwd().'/CaptchaImgs';
+                if (!is_dir($directoryPath)) {
+                    mkdir($directoryPath, 0755, true);
+                }
+                
+                $imagePath = $directoryPath.'/consignado_'.date('Y_m_d_H_i_s').'.png';
+                if (file_put_contents($imagePath, $response['response']) === false) {
+                    throw new \Exception("Erro ao gravar imagem");
+                }
             }
         }
 
-        // if(strlen($imageCaptchaDecoded) < 100){
-        //     unlink($imagePath);
-        //     $this->getImage();
-        // }
-
         return [
-            "status"    =>  true,
-            "imgPath"   => $imagePath
+            "status"    => true,
+            "imgPath"   => $imagePath,
+            "token"     => $token['response']
         ];
 
       }catch (\Exception $e){
