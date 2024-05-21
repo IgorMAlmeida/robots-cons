@@ -13,16 +13,16 @@ class CookieService extends Curl{
         $this->portalConsignadoAdm = env('URL_PORTAL_CONSIGNADO_ADMINISTRATIVO');
     }
 
-   public function getCookie():array {
+   public function getCookie($url):array {
 
       try{
         $sessionId = (new SessionService)->getSessionId();
-        $cookiePath = getcwd() . '/Cookies/';
-        $cookieFile = $cookiePath.$sessionId;
+        $cookiePath = getcwd() . '/Cookies';
+        $cookieFile = $cookiePath.'/cookie_'.date('Y_m_d_H_i_s');
         $cookie = '';
 
         $data = [
-            'url'           => $this->portalConsignadoAdm,
+            'url'           => $this->portalConsignadoAdm.$url,
             'method'        => 'GET',
             'followLocation'=> true,
             'cookie'        => $cookie,
@@ -34,12 +34,21 @@ class CookieService extends Curl{
         if(!$response['status']){
             throw new \Exception($response['response']);
         }
-
+        
+        $cookieContent = file_get_contents($cookieFile);
+        if (preg_match('/JSESSIONID\s+([^\s]+)/', $cookieContent, $matches)) {
+            $sessionValue = $matches[1];
+            $cookie = "JSESSIONID={$sessionValue}";
+        } else {
+            throw new \Exception("JSESSIONID not found in cookie file");
+        }
+        
         return [
             "erro"       =>  false,
             "response"   =>  "Cookie saved",
             "cookieFile" =>  $cookieFile,
             "cookiePath" =>  $cookiePath,
+            "cookie"     =>  $cookie
         ];
 
       }catch (\Exception $e){

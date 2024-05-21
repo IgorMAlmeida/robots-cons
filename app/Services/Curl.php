@@ -37,11 +37,6 @@ class Curl
                 curl_setopt($ch, CURLOPT_COOKIE, $values['cookie']);
             }
 
-            if(isset($values['debug']) && $values['debug'] == true){
-                curl_setopt($ch, CURLOPT_COOKIE, "JSESSIONID=0000MuAbyS_yXiZi-PJXtQ_xIOE:18guqmp5m");
-
-            }
-
             if(isset($values['followLocation'])){
                 curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
                 curl_setopt($ch, CURLOPT_MAXREDIRS, 100);
@@ -61,8 +56,6 @@ class Curl
 
             if(isset($values['debug']) && $values['debug'] == true){
                 var_dump($info);
-                // echo  $response;
-                // exit;
             }
             // var_dump($info);
 

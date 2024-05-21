@@ -64,9 +64,9 @@ class LoginService extends Curl{
                 "headers"        => [
                     'Accept: application/xml, text/xml, */*; q=0.01',
                     'Content-Type: application/x-www-form-urlencoded; charset=UTF-8',
-                    'Origin: https://www.portaldoconsignado.com.br',
-                    'Pragma: no-cache',
-                    'Referer: https://www.portaldoconsignado.com.br/home?'.$urlCounter,
+                    // 'Origin: https://www.portaldoconsignado.com.br',
+                    // 'Pragma: no-cache',
+                    // 'Referer: https://www.portaldoconsignado.com.br/home?'.$urlCounter,
                     'SECURITYTOKEN:' . $values['token'],
                 ],
             ];
@@ -74,15 +74,15 @@ class LoginService extends Curl{
             $response = $this->get($params);
             // var_dump($response);
             // exit;
-            $cookie = (new CookieService())->getCookie();
-
+            // $cookie = (new CookieService())->getCookie();
 
             return [
                 "erro"       =>  false,
                 "response"   =>  $response['response'],
                 "urlCounter" =>  $urlCounter,
-                "cookieFile" =>  $cookie['cookieFile'],
-                "cookiePath" =>  $cookie['cookiePath'],
+                // "cookieFile" =>  $cookie['cookieFile'],
+                // "cookiePath" =>  $cookie['cookiePath'],
+                // "cookie"     =>  $cookie['cookie'],
             ];
 
         }catch (\Exception $e){
