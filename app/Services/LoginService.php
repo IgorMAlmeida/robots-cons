@@ -60,6 +60,7 @@ class LoginService extends Curl{
                 "cookies"        => $values['cookie'],
                 "cookieFile"     => $values['cookieFile'],
                 "method"         => "POST",
+                "debug"          => true,
                 "followLocation" => true,
                 "headers"        => [
                     'Accept: application/xml, text/xml, */*; q=0.01',
@@ -72,16 +73,17 @@ class LoginService extends Curl{
             ];
 
             $response = $this->get($params);
-            // var_dump($response);
-            // exit;
+            $getPageContent = (new GetPageContent())->getContent($response['response']);
+            var_dump($response);
+            exit;
             // $cookie = (new CookieService())->getCookie();
 
             return [
                 "erro"       =>  false,
                 "response"   =>  $response['response'],
                 "urlCounter" =>  $urlCounter,
-                // "cookieFile" =>  $cookie['cookieFile'],
-                // "cookiePath" =>  $cookie['cookiePath'],
+                "cookieFile" =>  $values['cookieFile'],
+                "cookiePath" =>  $values['cookiePath'],
                 // "cookie"     =>  $cookie['cookie'],
             ];
 

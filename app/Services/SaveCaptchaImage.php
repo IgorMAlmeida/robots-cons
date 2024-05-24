@@ -23,6 +23,7 @@ class SaveCaptchaImage extends Curl{
    public function getImage($values):array {
 
       try{
+
         $data = [
             'url'           => $this->portalConsignadoAdm,
             'method'        => 'GET',
@@ -31,8 +32,8 @@ class SaveCaptchaImage extends Curl{
             'cookieFile'    => $values['cookieFile'],
         ];
         $response = $this->get($data);
-        $token = (new TokenService())->getToken($response);
 
+        $token = (new TokenService())->getToken($response);
         libxml_use_internal_errors(true);
         $doc = new DOMDocument();
         $doc->loadHTML($response['response']);
@@ -77,7 +78,7 @@ class SaveCaptchaImage extends Curl{
         return [
             "status"    => true,
             "imgPath"   => $imagePath,
-            "token"     => $token['response']
+            "token"     => $token['response'],
         ];
 
       }catch (\Exception $e){

@@ -16,7 +16,6 @@ class CookieService extends Curl{
    public function getCookie($url):array {
 
       try{
-        $sessionId = (new SessionService)->getSessionId();
         $cookiePath = getcwd() . '/Cookies';
         $cookieFile = $cookiePath.'/cookie_'.date('Y_m_d_H_i_s');
         $cookie = '';
@@ -30,7 +29,6 @@ class CookieService extends Curl{
         ];
         
         $response = $this->get($data);
-
         if(!$response['status']){
             throw new \Exception($response['response']);
         }
@@ -48,7 +46,7 @@ class CookieService extends Curl{
             "response"   =>  "Cookie saved",
             "cookieFile" =>  $cookieFile,
             "cookiePath" =>  $cookiePath,
-            "cookie"     =>  $cookie
+            "cookie"     =>  $cookie,
         ];
 
       }catch (\Exception $e){

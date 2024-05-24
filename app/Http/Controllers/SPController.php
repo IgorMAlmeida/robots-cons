@@ -16,7 +16,6 @@ class SPController extends Controller
         try{
             $cookie = (new CookieService())->getCookie("");
             $imageCaptcha = (new SaveCaptchaImage())->getImage($cookie);
-
             $params = [
                 "imgPath"    => $imageCaptcha['imgPath'],
                 "cookie"     => $cookie['cookieFile'],
@@ -29,12 +28,13 @@ class SPController extends Controller
             $params = [
                 "imgPath"    => $imageCaptcha['imgPath'],
                 "cookie"     => $cookie['cookie'],
-                "cookieFile" => $cookie['cookieFile'],
-                "cookiePath" => $cookie['cookiePath'],
+                "cookieFile" => $login['cookieFile'],
+                "cookiePath" => $login['cookiePath'],
+                "token"      => $imageCaptcha['token'],
             ];
-            // var_dump($login);exit;
             $govConsult=(new GovConsultService())->Consult([...$params]);
-
+echo "fim do processo"; 
+            exit;
             var_dump($imageCaptcha);
             var_dump($cookie);
             // exit;

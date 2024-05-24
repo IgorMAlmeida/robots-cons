@@ -4,6 +4,70 @@ namespace App\Services;
 
 class Curl
 {
+
+    public function performCurlRequest($url, $postFields = null, $headers = [], &$cookie = '', $referer = '') {
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $postFields ? 'POST' : 'GET');
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_COOKIE, $cookie);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false); // Não seguir redirecionamentos automaticamente
+        curl_setopt($ch, CURLOPT_HEADER, true); // Incluir cabeçalhos na resposta
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+    
+        if ($postFields) {
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
+        }
+    
+        if ($referer) {
+            curl_setopt($ch, CURLOPT_REFERER, $referer);
+        }
+    
+        $response = curl_exec($ch);
+        if ($response === false) {
+            echo 'Erro: ' . curl_error($ch);
+            curl_close($ch);
+            return null;
+        }
+    
+        // Separar cabeçalhos do corpo da resposta
+        $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+        $header = substr($response, 0, $headerSize);
+        $body = substr($response, $headerSize);
+    
+        // Capturar código de status
+        $statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    
+        // Capturar URL de redirecionamento
+        $redirectUrl = '';
+        if (preg_match('/^Location:\s*(.*)$/mi', $header, $matches)) {
+            $redirectUrl = trim($matches[1]);
+        }
+    
+        // Capturar cookies da resposta
+        if (preg_match_all('/^Set-Cookie:\s*([^;]*)/mi', $header, $matches)) {
+            foreach ($matches[1] as $item) {
+                parse_str($item, $cookieArray);
+                $cookie .= implode('; ', array_map(
+                    function ($v, $k) { return sprintf("%s=%s", $k, $v); },
+                    $cookieArray,
+                    array_keys($cookieArray)
+                )) . '; ';
+            }
+        }
+    
+        curl_close($ch);
+    
+        return [
+            'response' => $body,
+            'statusCode' => $statusCode,
+            'redirectUrl' => $redirectUrl,
+            'cookie' => $cookie
+        ];
+    }
+    
+
     protected function get(array $values):array
     {
 
@@ -17,6 +81,8 @@ class Curl
 
             if(isset($values['headers']) && !empty($values['headers'])){
                 curl_setopt($ch, CURLOPT_HTTPHEADER, $values['headers']);
+                curl_setopt($ch, CURLOPT_HEADER, true);
+                
             }
 
             if(isset($values['method']) && !empty($values['method'])){
@@ -55,7 +121,7 @@ class Curl
             $info = curl_getinfo($ch);
 
             if(isset($values['debug']) && $values['debug'] == true){
-                var_dump($info);
+                // var_dump($info);
             }
             // var_dump($info);
 
