@@ -115,21 +115,21 @@ class Curl
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-            curl_setopt($ch, CURLOPT_VERBOSE, true);
 
             $response = curl_exec($ch);
+            $effectiveUrl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
             $info = curl_getinfo($ch);
 
-            if(isset($values['debug']) && $values['debug'] == true){
+            if(isset($values['debug']) && $values['debug']){
                 // var_dump($info);
             }
-            // var_dump($info);
 
             curl_close($ch);
 
             return [
-                "status"    =>  true,
-                "response"  =>  $response
+                "status"      =>  true,
+                "response"    =>  $response,
+                "effectiveUrl" =>  $effectiveUrl
             ];
 
         }catch(\Exception $e){

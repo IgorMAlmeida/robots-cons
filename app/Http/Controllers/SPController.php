@@ -5,8 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\CookieService;
 use App\Services\GovConsultService;
 use App\Services\LoginService;
-use App\Services\SaveCaptchaImage;
-use Illuminate\Auth\Events\Login;
+use App\Services\CaptchaImage;
 use Illuminate\Http\Request;
 
 class SPController extends Controller
@@ -14,28 +13,43 @@ class SPController extends Controller
     public function Gov(Request $request) : array
     {
         try{
-            
-
             $cookie = (new CookieService())->getCookie("");
-            $imageCaptcha = (new SaveCaptchaImage())->getImage($cookie);
+            if($cookie['erro']) {
+                throw new \Exception($cookie['response']);
+            }
+
+            $imageCaptcha = (new CaptchaImage())->getImage($cookie['response']);
+            if($imageCaptcha['erro']) {
+                throw new \Exception($imageCaptcha['response']);
+            }
+
             $params = [
-                "imgPath"    => $imageCaptcha['imgPath'],
-                "cookie"     => $cookie['cookieFile'],
-                "cookieFile" => $cookie['cookieFile'],
-                "cookiePath" => $cookie['cookiePath'],
-                "token"      => $imageCaptcha['token'],
+                "imgPath"    => $imageCaptcha['response']['imgPath'],
+                "token"      => $imageCaptcha['response']['token'],
+                "cookie"     => $cookie['response']['cookieFile'],
+                "cookieFile" => $cookie['response']['cookieFile'],
+                "cookiePath" => $cookie['response']['cookiePath'],
             ];
             
             $login = (new LoginService())->PortalConsignado($params);
+            if($login['erro']) {
+                throw new \Exception($login['response']);
+            }
+
             $params = [
-                "imgPath"    => $imageCaptcha['imgPath'],
-                "cookie"     => $cookie['cookie'],
-                "cookieFile" => $login['cookieFile'],
-                "cookiePath" => $login['cookiePath'],
-                "pageContent"=> $login['pageContent'],
-                "token"      => $imageCaptcha['token'],
+                "cookie"     => $cookie['response']['cookie'],
+                "cookieFile" => $login['response']['cookieFile'],
+                "cookiePath" => $login['response']['cookiePath'],
+                "pageContent"=> $login['response']['pageContent'],
+                "token"      => $imageCaptcha['response']['token'],
             ];
+
             $govConsult=(new GovConsultService())->Consult([...$params]);
+            var_dump($govConsult);exit;
+
+            // unlink($imageCaptcha['imgPath']);
+            // unlink($cookie['cookieFile']);
+            // exit;
             // unlink($imageCaptcha['imgPath']);
             // unlink($login['cookieFile']);
 echo "fim do processo";

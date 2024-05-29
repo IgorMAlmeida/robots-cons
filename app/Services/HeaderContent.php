@@ -2,10 +2,7 @@
 
 namespace App\Services;
 
-//apagar esse arquivo
-
-class GetPageContent {
-
+class HeaderContent {
 
    public function getContent($html):array
    {
@@ -14,7 +11,6 @@ class GetPageContent {
             preg_match('/^Location:\s*(.+)$/mi', $html, $locationMatches);
             $location = $locationMatches[1] ?? null;
 
-            // Expressão regular para o objeto AJAX
             preg_match('/Wicket\.Ajax\.ajax\((\{.+?\})\);/s', $html, $ajaxMatches);
             $ajaxObject = $ajaxMatches[1] ?? null;
             $ajaxArray = json_decode($ajaxObject, true);
@@ -25,18 +21,18 @@ class GetPageContent {
             preg_match('/^Set-Cookie:\s*(.+)$/mi', $html, $locationMatches);
             $cookies = $locationMatches[1] ?? null;
 
-            // var_dump($cookies);
-            // var_dump($ajaxLocation);
-        
-            // exit;
-
+            if(is_null($location) && is_null($ajaxArray) && is_null($ajaxLocation) && is_null($cookies)){
+                throw new \Exception("Failed to get header content");
+            }
+            
             return [
                 "erro"          =>  false,
-                "ajaxResponse"  =>  $ajaxArray,
-                "location"      =>  $location,
-                "cookies"       =>  $cookies,
-                "ajaxLocation"  =>  $ajaxLocation,
-
+                "response"      =>[
+                    "ajaxResponse"  =>  $ajaxArray,
+                    "location"      =>  $location,
+                    "cookies"       =>  $cookies,
+                    "ajaxLocation"  =>  $ajaxLocation,
+                ]
             ];
 
         }catch (\Exception $e){

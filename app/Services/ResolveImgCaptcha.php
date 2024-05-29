@@ -7,15 +7,23 @@ use App\Services\ImageToText;
 class ResolveImgCaptcha
 {
 
-    public function resolve(array $values):array
+    private string $anticaptchakey;
+       
+    public  function __construct()
+    {
+        $this->anticaptchakey = env('ANTICAPTCHA_KEY');
+    }
+
+
+    public function resolve(string $pathCaptcha): array
     {
         try{
  
             $api = new ImageToText();
 
-            $api->setKey($values['Key']);
+            $api->setKey($this->anticaptchakey);
 
-            $api->setFile($values['PathCaptcha']);
+            $api->setFile($pathCaptcha);
 
             $api->setSoftId(0);
 
@@ -29,7 +37,7 @@ class ResolveImgCaptcha
                 throw new \Exception($api->getErrorMessage());
             }
 
-            // unlink($values['PathCaptcha']);
+            unlink($pathCaptcha);
             return [
                 "status"    =>  true,
                 "response"  =>  $api->getTaskSolution()

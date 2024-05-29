@@ -10,8 +10,8 @@ class TokenService extends Curl{
 
     public function getToken($values): array {
         try {
+
             libxml_use_internal_errors(true);
-    
             $doc = new DOMDocument();
             $htmlLoaded = $doc->loadHTML($values['response']);
     

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Helpers\CookieSession;
 use App\Services\Curl;
 
 class CookieService extends Curl{
@@ -17,7 +18,10 @@ class CookieService extends Curl{
 
       try{
         $cookiePath = getcwd() . '/Cookies';
-        $cookieFile = $cookiePath.'/cookie_'.date('Y_m_d_H_i_s').".txt";
+        if (!is_dir($cookiePath) && !mkdir($cookiePath, 0777, true)) {
+            throw new \Exception("Failed to create cookie directory");
+        }
+        $cookieFile = $cookiePath.'/cookie_'.date('Y_m_d_H_i_s');
         $cookie = '';
 
         $data = [
@@ -33,20 +37,19 @@ class CookieService extends Curl{
             throw new \Exception($response['response']);
         }
         
-        $cookieContent = file_get_contents($cookieFile);
-        if (preg_match('/JSESSIONID\s+([^\s]+)/', $cookieContent, $matches)) {
-            $sessionValue = $matches[1];
-            $cookie = "JSESSIONID={$sessionValue}";
-        } else {
-            throw new \Exception("JSESSIONID not found in cookie file");
+        $cookie = CookieSession::getSessionValue($cookieFile);
+        if(!$cookie){
+            throw new \Exception("Failed to get cookie");
         }
-        
+        $cookie = "JSESSIONID={$cookie['cookie']}";
+       
         return [
             "erro"       =>  false,
-            "response"   =>  "Cookie saved",
-            "cookieFile" =>  $cookieFile,
-            "cookiePath" =>  $cookiePath,
-            "cookie"     =>  $cookie,
+            "response"   =>[
+                "cookieFile" =>  $cookieFile,
+                "cookiePath" =>  $cookiePath,
+                "cookie"     =>  $cookie,
+            ]
         ];
 
       }catch (\Exception $e){
