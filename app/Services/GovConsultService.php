@@ -1,8 +1,9 @@
 <?php
 
 namespace App\Services;
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-ini_set("display_errors", 1);
 
 use App\Services\Curl;
 
@@ -27,6 +28,9 @@ class GovConsultService extends Curl{
    public function Consult($values):array
    {
         try{
+            $location = "Referer: ". $values["pageContent"]["location"];
+            $ajaxBase = "Wicket-Ajax-BaseURL: ". basename($values["pageContent"]["location"])."";
+
             $secToken = 'SECURITYTOKEN:'.$values['token'];
             $headers = [
                 'Accept: application/xml, text/xml, */*; q=0.01',
@@ -36,13 +40,13 @@ class GovConsultService extends Curl{
                 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8',
                 'Origin: https://www.portaldoconsignado.com.br',
                 'Pragma: no-cache',
-                'Referer: https://www.portaldoconsignado.com.br/selecaoPerfil?2',
+                $location,
                 'Sec-Fetch-Dest: empty',
                 'Sec-Fetch-Mode: cors',
                 'Sec-Fetch-Site: same-origin',
                 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0',
                 'Wicket-Ajax: true',
-                'Wicket-Ajax-BaseURL: selecaoPerfil?2',
+                $ajaxBase,
                 'Wicket-FocusedElementId: id14',
                 'X-Requested-With: XMLHttpRequest, CSRF Prevention',
                 'sec-ch-ua: "Chromium";v="124", "Microsoft Edge";v="124", "Not-A.Brand";v="99"',
@@ -51,18 +55,24 @@ class GovConsultService extends Curl{
                 $secToken,
             ];
 
+            $followUrl = $values["pageContent"]["ajaxResponse"]["u"];
+            $followUrl = str_replace('./', '/', $followUrl);
+            $method = $values["pageContent"]["ajaxResponse"]["m"];
+            $formButton = $values["pageContent"]["ajaxResponse"]["f"]."_hd_0";
+
             $formData = [
-                "id13_hf_0"     => "",
+                $formButton    => "",
                 "radioGroup"    => "radio2",
                 "SECURITYTOKEN" => $values['token'],
-                "acessar"       => "1",
+                "acessar"       => "true",
             ];
             $formData = http_build_query($formData);
 
+            $url = $this->portalConsignadoBase.$followUrl;
             $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, 'https://www.portaldoconsignado.com.br/selecaoPerfil?2-1.IBehaviorListener.0-form-acessar');
+            curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
             curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
@@ -74,16 +84,299 @@ class GovConsultService extends Curl{
             curl_setopt($ch, CURLOPT_COOKIEJAR, $values['cookieFile']);
             curl_setopt($ch, CURLOPT_COOKIEFILE, $values['cookieFile']);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $formData);
-
-$response = curl_exec($ch);
-
-curl_close($ch);
+            $response = curl_exec($ch);
+            curl_close($ch);
 
 
-var_dump($response);
+            $getPageContent = (new GetPageContent())->getContent($response);
+            $cookie = explode(';', $getPageContent["cookies"]);
+            $cookie = $cookie[0];
+
+            $redirectUrl = $getPageContent["ajaxLocation"];
+
+            $location = "Referer: ". $redirectUrl;
+            $headers = [
+                'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                'Accept-Language: pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
+                'Cache-Control: no-cache',
+                'Connection: keep-alive',
+                'Pragma: no-cache',
+                $location,
+                'Sec-Fetch-Dest: document',
+                'Sec-Fetch-Mode: navigate',
+                'Sec-Fetch-Site: same-origin',
+                'Upgrade-Insecure-Requests: 1',
+                'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0',
+                'sec-ch-ua: "Chromium";v="124", "Microsoft Edge";v="124", "Not-A.Brand";v="99"',
+                'sec-ch-ua-mobile: ?0',
+                'sec-ch-ua-platform: "Linux"',
+            ];
+
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, 'https://www.portaldoconsignado.com.br/consignatario/autenticado');
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_MAXREDIRS, 100);
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+            curl_setopt($ch, CURLOPT_HEADER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                'Accept-Language: pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
+                'Cache-Control: no-cache',
+                'Connection: keep-alive',
+                'Pragma: no-cache',
+                'Sec-Fetch-Dest: document',
+                'Sec-Fetch-Mode: navigate',
+                'Sec-Fetch-Site: same-origin',
+                'Upgrade-Insecure-Requests: 1',
+                'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0',
+                'sec-ch-ua: "Chromium";v="124", "Microsoft Edge";v="124", "Not-A.Brand";v="99"',
+                'sec-ch-ua-mobile: ?0',
+                'sec-ch-ua-platform: "Linux"',
+            ]);
+            curl_setopt($ch, CURLOPT_COOKIE, $cookie);
+            $response = curl_exec($ch);
+            $referUrl = "Referer: ".curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+            curl_close($ch);
+            ///////////////////////////////////////////// ATÉ AQUI TA FUNCIONANDO CORRETAMENTE /////////////////////////////////////////////
+
+            // var_dump($response);exit;
+            /////// REQUISITAR TOKENS ////////////
+
+
+
+
+            $token = $values['token'];
+            $headerToken = "SECURITYTOKEN:". $token;
+
+
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, 'https://www.portaldoconsignado.com.br/csrfTokenS');
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Accept: */*',
+                'Accept-Language: pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
+                'Cache-Control: no-cache',
+                'Connection: keep-alive',
+                'Pragma: no-cache',
+                'Referer: https://www.portaldoconsignado.com.br/consignatario/autenticado?5',
+                'Sec-Fetch-Dest: script',
+                'Sec-Fetch-Mode: no-cors',
+                'Sec-Fetch-Site: same-origin',
+                'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0',
+                'sec-ch-ua: "Chromium";v="124", "Microsoft Edge";v="124", "Not-A.Brand";v="99"',
+                'sec-ch-ua-mobile: ?0',
+                'sec-ch-ua-platform: "Linux"',
+            ]);
+            curl_setopt($ch, CURLOPT_COOKIE, $cookie);
             
-echo "finalizou";
-exit;
+            $response = curl_exec($ch);
+            
+            curl_close($ch);
+    
+            $response = curl_exec($ch);
+
+            if (preg_match('/\("SECURITYTOKEN",\s*"([^"]+)"\);/', $response, $matches)) {
+                $tokenBusca = $matches[1];
+                // echo "Token: " . $token;
+            }            
+            
+            // curl_close($ch);
+            // var_dump($response);
+            // exit;
+
+
+            /////// FIM REQUISITAR TOKENS ////////////
+            // $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, 'https://www.portaldoconsignado.com.br/consignatario/pesquisarMargem');
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_MAXREDIRS, 100);
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+            curl_setopt($ch, CURLOPT_HEADER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                'Accept-Language: pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
+                'Cache-Control: no-cache',
+                'Connection: keep-alive',
+                'Pragma: no-cache',
+                // 'Referer: https://www.portaldoconsignado.com.br/consignatario/autenticado?5',
+                $referUrl,
+                'Sec-Fetch-Dest: document',
+                'Sec-Fetch-Mode: navigate',
+                'Sec-Fetch-Site: same-origin',
+                'Sec-Fetch-User: ?1',
+                'Upgrade-Insecure-Requests: 1',
+                'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0',
+                'sec-ch-ua: "Chromium";v="124", "Microsoft Edge";v="124", "Not-A.Brand";v="99"',
+                'sec-ch-ua-mobile: ?0',
+                'sec-ch-ua-platform: "Linux"',
+            ]);
+            curl_setopt($ch, CURLOPT_COOKIE, $cookie);
+            $response = curl_exec($ch);
+            $referUrl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+            curl_close($ch);
+
+            // var_dump($response);
+            // exit;
+
+            // $token = (new TokenService())->getToken(["response"=>$response]);
+
+            // var_dump($token);
+            // exit;
+            // echo "teste";exit;
+            $getPageContent = (new GetPageContent())->getContent($response);
+            // echo "teste";exit;
+
+            // var_dump($getPageContent);exit;
+            $followUrl = $getPageContent["ajaxResponse"]["u"];
+            $followUrl = str_replace('./', '/', $followUrl);
+            $method = $getPageContent["ajaxResponse"]["m"];
+            $formButton = $getPageContent["ajaxResponse"]["f"]."_hd_0";
+            $referUrl = "Referer: $referUrl";
+            
+            
+            // var_dump($referUrl);
+            // var_dump($followUrl);
+            // var_dump($method);
+            // var_dump($formButton);
+            // exit;
+            // echo($tokenBusca)exit;
+            $headerToken = "SECURITYTOKEN: $tokenBusca";
+            $formData = [
+                $formButton => "",
+                "cpfServidor" => "100.619.708-75",
+                "matriculaServidor" => "5866005",
+                "selectOrgao" => "",
+                "selectProduto" => "",
+                "selectEspecie" => "",
+                "SECURITYTOKEN" => $tokenBusca,
+                "botaoPesquisar" => "1",
+            ];
+            $formData = http_build_query($formData);
+            // var_dump($formData);exit;
+
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, 'https://www.portaldoconsignado.com.br/consignatario/'.$followUrl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Accept: application/xml, text/xml, */*; q=0.01',
+                'Accept-Language: pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
+                'Cache-Control: no-cache',
+                'Connection: keep-alive',
+                'Content-Type: application/x-www-form-urlencoded; charset=UTF-8',
+                'Origin: https://www.portaldoconsignado.com.br',
+                'Pragma: no-cache',
+                $referUrl,
+                $headerToken,
+                'Sec-Fetch-Dest: empty',
+                'Sec-Fetch-Mode: cors',
+                'Sec-Fetch-Site: same-origin',
+                'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0',
+                'Wicket-Ajax: true',
+                'Wicket-Ajax-BaseURL: consignatario/pesquisarMargem?7',
+                'Wicket-FocusedElementId: id23',
+                'X-Requested-With: XMLHttpRequest, CSRF Prevention',
+                'sec-ch-ua: "Chromium";v="124", "Microsoft Edge";v="124", "Not-A.Brand";v="99"',
+                'sec-ch-ua-mobile: ?0',
+                'sec-ch-ua-platform: "Linux"',
+            ]);
+            curl_setopt($ch, CURLOPT_COOKIE, $cookie);
+            // curl_setopt($ch, CURLOPT_POSTFIELDS, 'id22_hf_0=&cpfServidor=100.619.708-75&matriculaServidor=5866005&selectOrgao=&selectProduto=&selectEspecie=&SECURITYTOKEN=A0G7-IEJ7-N2LQ-4H29-JM52-RWRL-J0M6-BZ4Q-TIXN-G3L0-ANR3-D523-67TR-UK9E-HIX5-HUOS&botaoPesquisar=1');
+            curl_setopt($ch, CURLOPT_HEADER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $formData);
+            $response = curl_exec($ch);
+
+            var_dump($response);exit;
+
+            curl_close($ch);
+
+
+            $formData = [
+                $formButton => "",
+                "cpfServidor" => "100.619.708-75",
+                "matriculaServidor" => "5866005",
+                "selectOrgao" => "",
+                "selectProduto" => "",
+                "selectEspecie" => "",
+                "SECURITYTOKEN" => $token,
+                "botaoPesquisar" => "1",
+            ];
+            // var_dump($formData);exit;
+            $formData = http_build_query($formData);
+        
+
+            $url =  "https://www.portaldoconsignado.com.br/consignatario".$followUrl;
+            $referer = "Referer: https://www.portaldoconsignado.com.br/consignatario/pesquisarMargem?7";
+            $cookieHeader = "Cookie: ". $cookie;
+            // var_dump($referer);exit;
+
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+            curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            curl_setopt($ch, CURLOPT_HEADER, true);
+            curl_setopt($ch, CURLOPT_ENCODING, '');
+            curl_setopt($ch, CURLOPT_MAXREDIRS, -1);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Accept: application/xml, text/xml, */*; q=0.01',
+                'Accept-Language: pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
+                'Cache-Control: no-cache',
+                'Connection: keep-alive',
+                'Content-Type: application/x-www-form-urlencoded; charset=UTF-8',
+                'Origin: https://www.portaldoconsignado.com.br',
+                'Pragma: no-cache',
+                // 'Referer: https://www.portaldoconsignado.com.br/consignatario/pesquisarMargem?6',
+                $referer,
+                $headerToken,
+                // $cookieHeader,
+                'Sec-Fetch-Dest: empty',
+                'Sec-Fetch-Mode: cors',
+                'Sec-Fetch-Site: same-origin',
+                'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0',
+                'Wicket-Ajax: true',
+                'Wicket-Ajax-BaseURL: consignatario/pesquisarMargem?7',
+                'Wicket-FocusedElementId: id23',
+                'X-Requested-With: XMLHttpRequest, CSRF Prevention',
+                'sec-ch-ua: "Chromium";v="124", "Microsoft Edge";v="124", "Not-A.Brand";v="99"',
+                'sec-ch-ua-mobile: ?0',
+                'sec-ch-ua-platform: "Linux"',
+            ]);
+            curl_setopt($ch, CURLOPT_COOKIE, $cookie);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $formData);
+            // curl_setopt($ch, CURLOPT_POSTFIELDS, 'id24_hf_0=&cpfServidor=100.619.708-75&matriculaServidor=5866005&selectOrgao=&selectProduto=&selectEspecie=&SECURITYTOKEN=L19R-6CLQ-5YZ6-5HK8-VE7X-XACT-3ERG-164O-CNZB-D4N4-O848-UTCL-D9PD-38DV-HIU1-QQ26&botaoPesquisar=1');
+
+            $response = curl_exec($ch);
+            $info = curl_getinfo($ch);
+
+            curl_close($ch);
+            // var_dump($info);
+            var_dump($response);
+
+            exit;
+
+            // if (preg_match('/<redirect><!\[CDATA\[(.*?)\]\]><\/redirect>/', $response, $matches)) {
+            //     $redirectUrl = $matches[1];
+            
+            //     var_dump($redirectUrl);exit;
+            //     // Executar uma nova requisição cURL para a URL de redirecionamento
+            
+            //     // Processar a resposta da URL de redirecionamento
+            //     var_dump($response);
+            // }
+
+
+            // var_dump($response);
+            echo "finalizou";
+            exit;
 
 // $ch = curl_init('https://www.portaldoconsignado.com.br/selecaoPerfil?2-1.IBehaviorListener.0-form-acessar');
 // // curl_setopt($ch, CURLOPT_URL, 'https://www.portaldoconsignado.com.br/selecaoPerfil?2-1.IBehaviorListener.0-form-acessar');

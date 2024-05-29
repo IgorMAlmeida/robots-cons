@@ -14,6 +14,8 @@ class SPController extends Controller
     public function Gov(Request $request) : array
     {
         try{
+            
+
             $cookie = (new CookieService())->getCookie("");
             $imageCaptcha = (new SaveCaptchaImage())->getImage($cookie);
             $params = [
@@ -30,10 +32,13 @@ class SPController extends Controller
                 "cookie"     => $cookie['cookie'],
                 "cookieFile" => $login['cookieFile'],
                 "cookiePath" => $login['cookiePath'],
+                "pageContent"=> $login['pageContent'],
                 "token"      => $imageCaptcha['token'],
             ];
             $govConsult=(new GovConsultService())->Consult([...$params]);
-echo "fim do processo"; 
+            // unlink($imageCaptcha['imgPath']);
+            // unlink($login['cookieFile']);
+echo "fim do processo";
             exit;
             var_dump($imageCaptcha);
             var_dump($cookie);

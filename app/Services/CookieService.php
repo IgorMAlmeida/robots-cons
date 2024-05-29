@@ -17,7 +17,7 @@ class CookieService extends Curl{
 
       try{
         $cookiePath = getcwd() . '/Cookies';
-        $cookieFile = $cookiePath.'/cookie_'.date('Y_m_d_H_i_s');
+        $cookieFile = $cookiePath.'/cookie_'.date('Y_m_d_H_i_s').".txt";
         $cookie = '';
 
         $data = [

@@ -74,8 +74,8 @@ class LoginService extends Curl{
 
             $response = $this->get($params);
             $getPageContent = (new GetPageContent())->getContent($response['response']);
-            var_dump($response);
-            exit;
+            // var_dump($response);
+            // exit;
             // $cookie = (new CookieService())->getCookie();
 
             return [
@@ -84,6 +84,7 @@ class LoginService extends Curl{
                 "urlCounter" =>  $urlCounter,
                 "cookieFile" =>  $values['cookieFile'],
                 "cookiePath" =>  $values['cookiePath'],
+                "pageContent"=>  $getPageContent
                 // "cookie"     =>  $cookie['cookie'],
             ];
 
