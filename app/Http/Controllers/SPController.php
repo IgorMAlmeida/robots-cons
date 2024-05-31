@@ -5,14 +5,19 @@ namespace App\Http\Controllers;
 use App\Services\CookieService;
 use App\Services\GovConsultService;
 use App\Services\LoginService;
+use App\Services\ScrappingService;
 use App\Services\CaptchaImage;
-use Illuminate\Http\Request;
+use App\Http\Requests\GovSPRequest;
+
 
 class SPController extends Controller
 {
-    public function Gov(Request $request) : array
+    public function Gov(GovSPRequest $request) : array
     {
         try{
+            $cpf       = $request->input('cpf');
+            $matricula = $request->input('matricula');
+
             $cookie = (new CookieService())->getCookie("");
             if($cookie['erro']) {
                 throw new \Exception($cookie['response']);
@@ -42,36 +47,23 @@ class SPController extends Controller
                 "cookiePath" => $login['response']['cookiePath'],
                 "pageContent"=> $login['response']['pageContent'],
                 "token"      => $imageCaptcha['response']['token'],
+                "cpf"        => $cpf,
+                "matricula"  => $matricula,
             ];
 
-            $govConsult=(new GovConsultService())->Consult([...$params]);
-            var_dump($govConsult);exit;
+            $govConsult = (new GovConsultService())->Consult([...$params]);
 
-            // unlink($imageCaptcha['imgPath']);
-            // unlink($cookie['cookieFile']);
-            // exit;
-            // unlink($imageCaptcha['imgPath']);
-            // unlink($login['cookieFile']);
-echo "fim do processo";
-            exit;
-            var_dump($imageCaptcha);
-            var_dump($cookie);
-            // exit;
-            // unlink($imageCaptcha['imgPath']);
-            // unlink($cookie['cookieFile']);
-            // exit;
+            $scrapping = (new ScrappingService())->getDados($govConsult['response']);
 
             return [
                 'status'    => true,
-                'message'   => $login,
+                'message'   => $scrapping,
             ];
         }catch(\Exception $e){
             return [
                 'status'    => false,
                 'message'   => $e->getMessage(),
             ];
-            
         }
-
     }
 }

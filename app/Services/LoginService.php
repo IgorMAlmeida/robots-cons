@@ -46,7 +46,6 @@ class LoginService extends Curl{
                 "cookies"        => $values['cookie'],
                 "cookieFile"     => $values['cookieFile'],
                 "method"         => "POST",
-                "debug"          => true,
                 "followLocation" => true,
                 "headers"        => [
                     'Accept: application/xml, text/xml, */*; q=0.01',

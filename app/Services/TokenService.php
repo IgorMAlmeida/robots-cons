@@ -23,14 +23,12 @@ class TokenService extends Curl{
     
             libxml_use_internal_errors(false);
             $tags = $doc->getElementsByTagName('input');
-            $count = 0;
     
             $token = null;
             foreach ($tags as $tag) {
-                // Verificar se o input tem o atributo name com valor 'SECURITYTOKEN'
                 if ($tag->getAttribute('name') === 'inputToken' || $tag->getAttribute('name') === 'SECURITYTOKEN') {
                     $token = $tag->getAttribute('value');
-                    break; // Parar a busca após encontrar o token
+                    break;
                 }
             }
     
@@ -46,6 +44,45 @@ class TokenService extends Curl{
             return [
                 "status" => false,
                 "response" => "Erro ao processar HTML: " . $e->getMessage(),
+            ];
+        }
+    }
+
+    public function requestToken($values): array {
+        try{
+
+            $params = [
+                "url"            => $values['url'].'/csrfTokenS',
+                "cookie"         => $values['cookie'],
+                "method"         => "GET",
+                "followLocation" => true,
+                "headers"        => [
+                    'Accept: */*',
+                    $values['refer']
+                ],
+            ];
+
+            $response = $this->get($params);
+
+            if (preg_match('/\("SECURITYTOKEN",\s*"([^"]+)"\);/', $response['response'], $matches)) {
+                $tokenSearch = $matches[1];
+            }
+
+            if ($tokenSearch === null) {
+                throw new \Exception('Token not found in request');
+            }
+
+            return [
+                "erro"   => false,
+                "response" => [
+                    "token" => $tokenSearch
+                ],
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                "erro"      => true,
+                "response"  => "Erro ao processar HTML: " . $e->getMessage(),
             ];
         }
     }
