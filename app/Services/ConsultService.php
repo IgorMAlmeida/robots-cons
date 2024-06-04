@@ -1,15 +1,12 @@
 <?php
 
 namespace App\Services;
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 
 use App\Services\Curl;
 use App\Helpers\HeaderRequest;
 
 
-class GovConsultService extends Curl{
+class ConsultService extends Curl {
 
     private string $portalConsignadoBase;
        
@@ -18,7 +15,7 @@ class GovConsultService extends Curl{
         $this->portalConsignadoBase = env('URL_PORTAL_CONSIGNADO_BASE');
     }
 
-   public function Consult($values):array
+   public function consult($values):array
    {
         try{
             $cpf = $values['cpf'];
@@ -26,7 +23,7 @@ class GovConsultService extends Curl{
 
             $queryParams     = str_replace('./', '/', $values["pageContent"]["ajaxResponse"]["u"]);
             $formData = http_build_query([
-                "radioGroup"     => "radio2",
+                "radioGroup"     => $values['targetConsult'],
                 "SECURITYTOKEN"  => $values['token'],
                 "acessar"        => "true",
             ]);
@@ -42,7 +39,6 @@ class GovConsultService extends Curl{
                 "headers"        => ['Accept: */*'],
             ];
             $response = $this->get($params);
-            
             $getPageContent = (new HeaderContent())->getContent($response['response']);
             $cookie = explode(';', $getPageContent['response']["cookies"]);
             $cookie = $cookie[0];

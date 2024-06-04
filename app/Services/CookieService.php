@@ -14,7 +14,7 @@ class CookieService extends Curl{
         $this->portalConsignadoAdm = env('URL_PORTAL_CONSIGNADO_ADMINISTRATIVO');
     }
 
-   public function getCookie($url):array {
+   public function getCookie():array {
 
       try{
         $cookiePath = getcwd() . '/Cookies';
@@ -25,7 +25,7 @@ class CookieService extends Curl{
         $cookie = '';
 
         $data = [
-            'url'           => $this->portalConsignadoAdm.$url,
+            'url'           => $this->portalConsignadoAdm,
             'method'        => 'GET',
             'followLocation'=> true,
             'cookie'        => $cookie,
